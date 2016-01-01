@@ -1,0 +1,267 @@
+<html>
+
+<head>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>文字的声音</title>
+
+    <link rel="stylesheet" href="https://math-examples.github.io/web/tts.css"/>
+    <script src="https://math-examples.github.io/web/math-examples.js"></script>
+
+    <style type="text/css">
+        a {
+            color: #07519a;
+            text-decoration: none;
+        }
+
+        img {
+            height: auto;
+            width: 100%;
+            object-fit: contain;
+        }
+    </style>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .left {
+            /* background-color:#2196F3; */
+            padding: 20px;
+            float: left;
+            width: 100%; /* The width is 20%, by default */
+        }
+
+        .main {
+            /* background-color:#f1f1f1; */
+            padding: 20px;
+            float: left;
+            width: 0%; /* The width is 60%, by default */
+        }
+
+        .right {
+            /* background-color:#4CAF50;*/
+            padding: 20px;
+            float: left;
+            width: 0%; /* The width is 20%, by default */
+        }
+
+        /* Use a media query to add a break point at 800px: */
+        @media screen and (max-width: 800px) {
+            .left, .main, .right {
+                width: 100%; /* The width is 100%, when the viewport is 800px or smaller */
+            }
+        }
+
+        #ttsSetting {
+            display: none;
+        }
+
+        .oriContent {
+            display: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h2>📖🖋</h2>
+
+<div>
+
+    <!-- <button class="button" id="toggler" onclick="toggle(`.oriContent`,`.curContent`)">原文</button> -->
+
+    <button class="button" id="toggler" onclick="myToggle()">全屏📖</button>
+
+    <button class="button" id="changeBgColor" onclick="changeBgColor()">背景🌈</button>
+    
+    <button class="button" id="resizeText1" onclick="resizeText(1)">字体➕️</button>
+
+    <button class="button" id="resizeText2" onclick="resizeText(-1)">字体➖️</button>
+
+    <button class="button" id="speak" onclick="speak()">朗读🔊</button>
+
+    <!-- <button class="button" id="pause" onclick="pause5()">暂停❤<button> -->
+
+    <label id="selectFileLabel" class="button" for="selectFile">选择文本</label>
+    <input type="file" id="selectFile" accept=".txt, .html">
+
+</div>
+
+<div id="ttsSetting">
+    <form>
+        <div>
+            <label for="rate">语速</label>
+            <input type="range" min="0.5" max="2" value="1" step="0.1" id="rate"/>
+            <div class="rate-value">1</div>
+        </div>
+
+        <div>
+            <label for="pitch">音调</label>
+            <input type="range" min="0" max="2" value="1" step="0.1" id="pitch"/>
+            <div class="pitch-value">1</div>
+        </div>
+
+        <select></select>
+    </form>
+</div>
+
+<div class="left">
+
+    <pre class="oriContent" id="oriText">Empty</pre>
+
+    <div class="curContent" id="txt2html">
+    </div>
+
+</div>
+
+<div class="main">
+
+</div>
+
+<div class="right">
+
+</div>
+
+<script>
+    txtHref = "";
+</script>
+
+<script language="JavaScript">
+    function processUser() {
+        if (txtHref != "") return;
+        const params = new URLSearchParams(window.location.search);
+        const title = params.get("title");
+        const href = params.getAll("href");
+
+        if (href.length != 0) {
+            txtHref = href[0];
+            let x = document.getElementById('selectFile');
+            x.remove();
+            x = document.getElementById('selectFileLabel');
+            x.remove();
+        }
+    }
+
+    function myToggle() {
+        toggle(null, null, '全屏📖', '返回↩️', toggleFullscreen1, toggleFullscreen2);
+    }
+</script>
+
+<script>
+
+    async function displayTxt() {
+        try {
+            let x = document.querySelector("#oriText");
+            if (x) {
+                let text = await downloadFile(txtHref);
+                txt2html(text);
+                x.textContent = text;
+            }
+
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    async function displayTxtLocal(text) {
+        try {
+            txt2html(text);
+            document.querySelector("#oriText").textContent = text;
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+</script>
+
+<script>
+    function setButtonSelectFile() {
+        const selectFile = document.getElementById('selectFile');
+        if (!selectFile) return;
+        selectFile.style.opacity = 0;
+        selectFile.addEventListener('change', selectFiles);
+    }
+
+    setButtonSelectFile();
+
+    function readText(file) {
+
+        var fr = new FileReader();
+        fr.onload = function () {
+            displayTxtLocal(fr.result);
+        }
+
+        fr.readAsText(file);
+    }
+
+    function selectFiles() {
+        const selectFile = document.getElementById('selectFile');
+        if (!selectFile) return;
+        const curFiles = selectFile.files;
+        if (curFiles.length === 0) {
+            showLog('没有选择文件');
+        } else {
+            for (const file of curFiles) {
+                if (validFileTypeTxt(file)) {
+                    showLog(`文件名 ${file.name}, 文件大小 ${returnFileSize(file.size)}.`);
+                    readText(file);
+                } else {
+                    showLog(`文件名无效 ${file.name}, 文件类型 ${file.type}. 请重新选择.`);
+                }
+            }
+        }
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
+    const fileTypesTxt = [
+        'text/plain',
+        'text/html'
+    ];
+
+    function validFileTypeTxt(file) {
+        return true;
+        //return fileTypesTxt.includes(file.type);
+    }
+
+    function returnFileSize(number) {
+        if (number < 1024) {
+            return number + 'bytes';
+        } else if (number > 1024 && number < 1048576) {
+            return (number / 1024).toFixed(1) + 'KB';
+        } else if (number > 1048576) {
+            return (number / 1048576).toFixed(1) + 'MB';
+        }
+    }
+
+    function init() {
+        processUser();
+        displayTxt();
+
+        document.addEventListener("readystatechange", (event) => {
+            if (event.target.readyState === "interactive") {
+                try {
+
+                } catch (e) {
+                    showLog(e.message);
+                }
+                //initLoader();
+            } else if (event.target.readyState === "complete") {
+                //initApp();
+            }
+        });
+    }
+
+    init();
+
+</script>
+
+</body>
+
+</html>
