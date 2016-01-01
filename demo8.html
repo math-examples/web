@@ -1,0 +1,1152 @@
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  ⚠️  DO NOT TOUCH #log COLOR RULES                          ║
+     ╠══════════════════════════════════════════════════════════════╣
+     ║  Chrome 113 bug: color-mix(currentColor, transparent)       ║
+     ║  → renders text INVISIBLE.                                 ║
+     ║                                                            ║
+     ║  ✗ NO color-mix() on #log color                             ║
+     ║  ✗ NO currentColor inside ANY color-mix() in #log           ║
+     ║  ✗ DO NOT "simplify" color: currentColor — it is required  ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="author" content="小洢工作室" />
+<meta name="copyright" content="© 小洢工作室. 保留所有权利." />
+<title>指读宝</title>
+<style>
+  :root {
+    --theme-1-bg: #F5F5F7; --theme-1-fg: #1C1C1E;
+    --theme-2-bg: #F4ECD8; --theme-2-fg: #3B2F1E;
+    --theme-3-bg: #1C1C1E; --theme-3-fg: #F2F2F7;
+    --theme-4-bg: #121212; --theme-4-fg: #E0E0E0;
+    --theme-5-bg: #000000; --theme-5-fg: #E0E0E0;
+
+    --primary: #007aff; --accent: #34c759; --pink: #ff6b9d; --purple: #af52de;
+    --bg: var(--theme-1-bg);
+    --fs-btn-color: color-mix(in srgb, currentColor 78%, transparent);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: var(--theme-3-bg); }
+    body { color: var(--theme-3-fg); }
+  }
+
+  * { box-sizing: border-box; transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease; }
+
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--theme-1-fg);
+  }
+  .box {
+    max-width: 720px; margin: 0 auto;
+    background: var(--bg); border-radius: 14px; padding: 16px;
+    box-shadow: 0 4px 20px color-mix(in srgb, currentColor 6%, transparent);
+  }
+  textarea {
+    width: 100%; height: 160px; resize: vertical;
+    padding: 12px; font-size: 16px; line-height: 1.5;
+    border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 10px; outline: none;
+    background: transparent; color: inherit;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; }
+  select, input[type=range] { flex: 1; min-width: 120px; }
+
+/* ── select 跟随主题 ── */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: color-mix(in srgb, currentColor 6%, transparent);
+  color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 10px;
+  padding: 10px 32px 10px 12px;
+  font-size: 15px;
+  font-weight: 500;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+}
+select option {
+  background-color: var(--bg);
+  color: inherit;
+}
+  button {
+    appearance: none; border: none; border-radius: 10px;
+    padding: 10px 16px; font-size: 15px; font-weight: 600;
+    background: var(--primary); color: #fff; cursor: pointer;
+  }
+  button.secondary { background: color-mix(in srgb, currentColor 8%, transparent); color: inherit; }
+  button.stop-mode { background: #ff3b30; color: #fff; }
+
+  /* ─── iOS Value Bubble Slider (Apple Podcasts-style) ─── */
+  .bub-row {
+    display: flex; align-items: center; gap: 10px; flex: 1; min-width: 140px;
+  }
+  .bub-label {
+  font-size: 13px; color: currentColor; opacity: 0.55;
+    white-space: nowrap; min-width: 28px;
+  }
+  .bub-wrap {
+    flex: 1; position: relative; height: 36px; display: flex; align-items: center;
+  }
+  .bub-track {
+    width: 100%; height: 4px; border-radius: 2px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    position: relative; cursor: pointer; touch-action: none;
+  }
+  .bub-fill {
+    position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px;
+    background: var(--primary);
+    transition: width 0.1s linear; pointer-events: none;
+  }
+  .bub-thumb {
+    position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.15s ease, height 0.15s ease, box-shadow 0.15s ease;
+    z-index: 2; pointer-events: none;
+  }
+  .bub-thumb.active {
+    width: 32px; height: 32px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(0,0,0,0.1);
+  }
+  .bub-bubble {
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: var(--primary); color: #fff;
+    font-size: 12px; font-weight: 600;
+    padding: 4px 8px; border-radius: 8px;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 10;
+  }
+  .bub-bubble::after {
+    content: ''; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent; border-top-color: var(--primary);
+  }
+  .bub-bubble.show {
+    opacity: 1; transform: translateX(-50%) scale(1);
+  }
+  .bub-value {
+    font-size: 13px; font-weight: 600; color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    padding: 2px 8px; border-radius: 10px; min-width: 40px; text-align: center;
+    white-space: nowrap;
+  }
+  
+#log {
+  font-size: 13px;
+  color: currentColor;
+  white-space: pre-wrap;
+
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+
+  backdrop-filter: blur(2px) saturate(110%);
+  -webkit-backdrop-filter: blur(2px) saturate(110%);
+
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--bg) 80%, transparent);
+  box-shadow:
+    0 5px 16px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.16);
+
+  padding: 8px 12px; margin-bottom: 12px; min-height: 20px;
+  position: relative; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 6px;
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+#log.has-text {
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+}
+
+  body.fs-mode #log {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    border-radius: 0; border-left: none; border-right: none; border-top: none;
+    font-size: 15px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 0 rgba(0,0,0,0.05);
+    gap: 8px; transition: none; touch-action: none; pointer-events: none;
+    margin-bottom: 0; border-bottom: none;
+  }
+  body.fs-mode #log .fullscreen-btn { pointer-events: auto; }
+  body.fs-mode #log .word-link { pointer-events: auto; }
+  body.fs-mode.log-hidden #log { opacity: 0; pointer-events: none; }
+  body.fs-mode:not(.log-hidden) #log { transform: translateY(0); }
+  body.fs-mode #log, body.fs-mode #log * { zoom: 1 !important; }
+
+  #log .log-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #log .word-link {
+    flex-shrink: 1; min-width: 0; font-size: 13px; color: var(--primary);
+    text-decoration: none; font-weight: 600; white-space: nowrap;
+    padding: 4px 10px; border-radius: 6px; background: color-mix(in srgb, currentColor 6%, transparent); transition: background 0.15s;
+    max-width: 120px; overflow: hidden; text-overflow: ellipsis;
+  }
+  #log .word-link:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+  #log .word-link:active { background: color-mix(in srgb, currentColor 14%, transparent); }
+
+  @media (max-width: 520px) {
+    #log .word-link { max-width: 36px; font-size: 16px; padding: 4px 8px; text-align: center; }
+    #log .word-link .link-text { display: none; }
+  }
+
+  #log .fullscreen-btn {
+    margin-left: auto; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; cursor: pointer; padding: 10px; border-radius: 6px;
+    color: var(--fs-btn-color);
+    flex-shrink: 0; transition: color 0.15s, background 0.15s, transform 0.15s; z-index: 2;
+  }
+  #log .fullscreen-btn:hover { color: currentColor; background: color-mix(in srgb, currentColor 6%, transparent); transform: scale(1.05); }
+  #log .fullscreen-btn svg { width: 20px; height: 20px; display: block; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+  body.fs-mode .box > *:not(#log):not(#reader):not(.footer-copy) { display: none !important; }
+  body.fs-mode { padding: 0; background: var(--bg); position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; overscroll-behavior: none; }
+  body.fs-mode .box { max-width: 100%; border-radius: 0; padding: 0; box-shadow: none; min-height: 100vh; }
+  body.fs-mode #reader { max-height: 100vh; height: 100vh; overflow-y: auto; padding: 16px; box-sizing: border-box; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+
+  #reader { display: none; background: transparent; }
+  #reader.active { display: block; max-height: 400px; overflow-y: auto; }
+  #reader .paragraph {
+    padding: 2px 14px; margin-bottom: 2px; border-radius: 4px;
+    font-size: 17px; line-height: 1.4;
+    color: inherit; transition: background 0.3s, color 0.3s;
+    white-space: pre-wrap;
+  }
+  #reader .paragraph.active { background: color-mix(in srgb, var(--primary) 8%, transparent); color: inherit; font-weight: 500; border-radius: 10px; padding: 8px 14px; }
+  #reader .paragraph.spoken { opacity: 0.35; }
+  #reader .paragraph mark.word-hl { background: #E9D16E; color: inherit; border-radius: 0.2em; padding: 1px 3px; font-weight: 500; }
+
+
+  #editor.hidden { display: none; }
+  #reader-controls { display: none; }
+  #reader-controls.active { display: flex; }
+  #edit-toggle { display: none; }
+  #edit-toggle.active { display: inline-block; }
+
+  #empty-state {
+    text-align: center; padding: 40px 20px; color: inherit; font-size: 15px; line-height: 1.8; display: none; opacity: 0.6;
+  }
+  #empty-state code { background: color-mix(in srgb, currentColor 10%, transparent); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  #empty-state .empty-icon { width: 64px; height: 64px; margin: 0 auto 16px; filter: drop-shadow(0 3px 8px rgba(0,122,255,0.2)); }
+
+  #about-overlay {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
+    transition: opacity 0.25s ease;
+  }
+  #about-overlay.active {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #about-card {
+    background: var(--bg); border-radius: 16px; max-width: 520px; width: 100%;
+    padding: 24px 20px 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto;
+  }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .logo-svg { width: 56px; height: 56px; flex-shrink: 0; filter: drop-shadow(0 3px 8px rgba(0,122,255,0.3)); }
+  .logo-text-group { display: flex; flex-direction: column; }
+  #about-card h2 { margin: 0; font-size: 22px; font-weight: 700; color: inherit; }
+  #about-card .version { font-size: 12px; color: inherit; opacity: 0.55; margin-top: 2px; }
+  #about-card .desc { font-size: 15px; line-height: 1.8; color: inherit; opacity: 0.8; margin-bottom: 14px; }
+  #about-card .feature-list { list-style: none; padding: 0; margin: 0 0 16px; }
+  #about-card .feature-list li { font-size: 14px; line-height: 1.9; color: inherit; opacity: 0.75; padding-left: 20px; position: relative; }
+  #about-card .feature-list li::before { content: '✓'; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
+  #about-card .how-to { background: color-mix(in srgb, currentColor 5%, transparent); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.8; color: inherit; opacity: 0.7; }
+  #about-card .how-to strong { color: inherit; opacity: 1; }
+  .studio { text-align: center; font-size: 13px; color: inherit; opacity: 0.55; padding-top: 14px; border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .studio-logo { width: 28px; height: 28px; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(255,107,157,0.3)); }
+  .studio span { text-align: left; line-height: 1.5; }
+  .studio strong { color: var(--pink); font-weight: 600; }
+  .icon-row { display: flex; justify-content: center; gap: 16px; margin: 12px 0; }
+  .icon-row .mini-icon { width: 36px; height: 36px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+  #about-close { display: block; width: 100%; margin-top: 14px; padding: 12px; font-size: 16px; font-weight: 600; background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+  .footer-copy { text-align: center; font-size: 11px; color: inherit; opacity: 0.4; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="box">
+
+  <div id="log">
+    <span class="log-text"></span>
+    <button class="fullscreen-btn" id="fs-toggle" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+      <svg id="fs-icon-expand" viewBox="0 0 24 24"><path d="M16 3h3a2 2 0 0 1 2 2v3 M8 21H5a2 2 0 0 1-2-2v-3"/></svg>
+      <svg id="fs-icon-close" style="display:none;" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div id="empty-state">
+    <svg class="empty-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="emptyGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#007aff;stop-opacity:0.15"/><stop offset="100%" style="stop-color:#34c759;stop-opacity:0.15"/></linearGradient></defs>
+      <circle cx="32" cy="32" r="30" fill="url(#emptyGrad)"/>
+      <path d="M14 16 L14 46 Q14 48 16 48 L30 48 Q32 48 32 46 L32 16 Q32 14 30 14 L16 14 Q14 14 14 16 Z" fill="#007aff" opacity="0.8"/>
+      <path d="M50 16 L50 46 Q50 48 48 48 L34 48 Q32 48 32 46 L32 16 Q32 14 34 14 L48 14 Q50 14 50 16 Z" fill="#34c759" opacity="0.7"/>
+      <rect x="31" y="14" width="2" height="34" rx="0.5" fill="currentColor" opacity="0.3"/>
+      <text x="32" y="36" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">?</text>
+    </svg>
+    No text loaded.<br>
+    Use <code>?href=https://example.com/text.txt</code> in the URL to load a text file.
+  </div>
+
+  <div class="row" id="editor-controls">
+    <button id="bgCycle" class="secondary" style="padding:6px 10px;font-size:15px;min-width:auto;">☀️</button>
+    <select id="voiceSelect"></select>
+    <button id="showAllVoices" class="secondary" style="padding: 6px 10px; font-size: 13px; min-width: 60px;">🌐 All</button>
+    <button id="about-btn" class="secondary" style="padding: 6px 10px; font-size: 13px; min-width: 60px; margin-left: auto;">📋 简介</button>
+  </div>
+  <div class="row" id="editor-controls2">
+    <div class="bub-row">
+      <span class="bub-label">语速</span>
+      <div class="bub-wrap">
+        <div class="bub-track" id="rateTrack">
+          <div class="bub-fill" id="rateFill"></div>
+          <div class="bub-thumb" id="rateThumb"></div>
+          <div class="bub-bubble" id="rateBubble"></div>
+        </div>
+      </div>
+      <span class="bub-value" id="rateVal">1.0</span>
+      <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" style="display:none;" />
+    </div>
+    <div class="bub-row">
+      <span class="bub-label">音调</span>
+      <div class="bub-wrap">
+        <div class="bub-track" id="pitchTrack">
+          <div class="bub-fill" id="pitchFill"></div>
+          <div class="bub-thumb" id="pitchThumb"></div>
+          <div class="bub-bubble" id="pitchBubble"></div>
+        </div>
+      </div>
+      <span class="bub-value" id="pitchVal">1.0</span>
+      <input type="range" id="pitch" min="0" max="2" step="0.1" value="1" style="display:none;" />
+    </div>
+  </div>
+  <div class="row" id="main-buttons">
+    <button id="toggle">▶ Read</button>
+    <button id="paste" class="secondary">📋 粘贴</button>
+    <button id="edit-toggle" class="secondary">✏️ 编辑</button>
+    <input type="file" id="fileInput" accept=".txt" style="display:none;" />
+  </div>
+  <div class="row" id="reader-controls">
+    <button id="toggle-reader">▶ Read</button>
+    <button id="back" class="secondary">✏️ 编辑</button>
+  </div>
+  <div id="editor">
+    <textarea id="text" placeholder="Type or paste text here to read aloud…"></textarea>
+  </div>
+  <div id="reader"></div>
+
+  <div class="footer-copy">
+    © <span id="copyright-year-footer"></span> 小洢工作室. 保留所有权利.
+  </div>
+</div>
+
+<div id="about-overlay">
+  <div id="about-card">
+    <div class="logo-wrap">
+      <svg class="logo-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#007aff;stop-opacity:0.15"/><stop offset="100%" style="stop-color:#34c759;stop-opacity:0.15"/></linearGradient>
+          <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#5a3e1b"/><stop offset="100%" style="stop-color:#8b6914"/></linearGradient>
+          <linearGradient id="dressGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#ff6b9d;stop-opacity:0.8"/><stop offset="100%" style="stop-color:#ff3b6e;stop-opacity:0.9"/></linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" fill="url(#bgGrad)"/>
+        <ellipse cx="32" cy="14" rx="12" ry="10" fill="url(#hairGrad)"/>
+        <path d="M20 16 Q18 28 20 38 Q22 30 24 20 Z" fill="url(#hairGrad)" opacity="0.8"/>
+        <path d="M44 16 Q46 28 44 38 Q42 30 40 20 Z" fill="url(#hairGrad)" opacity="0.8"/>
+        <ellipse cx="32" cy="26" rx="10" ry="9" fill="#ffe0c4"/>
+        <ellipse cx="28" cy="25" rx="2" ry="2.5" fill="#333"/><ellipse cx="36" cy="25" rx="2" ry="2.5" fill="#333"/>
+        <circle cx="28.5" cy="24.5" r="0.8" fill="#fff"/><circle cx="36.5" cy="24.5" r="0.8" fill="#fff"/>
+        <ellipse cx="26" cy="28" rx="2.5" ry="1.5" fill="#ff6b9d" opacity="0.3"/><ellipse cx="38" cy="28" rx="2.5" ry="1.5" fill="#ff6b9d" opacity="0.3"/>
+        <path d="M29 30 Q32 32 35 30" stroke="#ff6b9d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M24 36 Q22 44 20 52 L44 52 Q42 44 40 36 Z" fill="url(#dressGrad)"/>
+        <path d="M28 36 L32 40 L36 36" stroke="#fff" stroke-width="1" fill="none" opacity="0.6"/>
+        <rect x="22" y="42" width="20" height="14" rx="2" fill="#007aff" opacity="0.9"/>
+        <rect x="22" y="42" width="10" height="14" rx="1" fill="#34c759" opacity="0.7"/>
+        <line x1="32" y1="42" x2="32" y2="56" stroke="#fff" stroke-width="0.5" opacity="0.5"/>
+        <line x1="46" y1="38" x2="52" y2="32" stroke="#ffd700" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="52" cy="32" r="2" fill="#ffd700"><animate attributeName="r" values="2;3;2" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/></circle>
+        <path d="M14 28 Q11 32 14 36" stroke="#007aff" stroke-width="1.5" fill="none" opacity="0.6" stroke-linecap="round"/>
+        <path d="M11 25 Q7 32 11 39" stroke="#007aff" stroke-width="1" fill="none" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-text-group"><h2>指读宝</h2><div class="version">v1.0 · 指尖点读神器</div></div>
+    </div>
+    <div class="desc">不用买点读笔，打开指读宝，手指长按任意单词就能听到标准发音。像拥有了一支点读笔，但只需要你的手指。</div>
+    <ul class="feature-list">
+      <li>长按单词即时发音，标准语音引擎</li>
+      <li>一键整段朗读，逐段高亮跟随</li>
+      <li>长按自动弹出 Bing / Cambridge / 有道词典</li>
+      <li>语速、音调自由调节，适配不同学习场景</li>
+      <li>支持文本输入与剪贴板粘贴</li>
+      <li>自动匹配系统语言，支持全球多种语音</li>
+    </ul>
+    <div class="how-to"><strong>使用方式：</strong><br>1. 在文本框中输入或粘贴英文内容<br>2. 点击「▶ Read」开始整段朗读<br>3. 在阅读模式中长按任意单词即可发音</div>
+    <div id="modeSwitchLink" style="text-align:center; margin-bottom:12px;"></div>
+    <div class="icon-row">
+      <svg class="mini-icon" viewBox="0 0 36 36"><path d="M6 8 L6 30 Q6 31 7 31 L17 31 Q18 31 18 30 L18 8 Q18 7 17 7 L7 7 Q6 7 6 8 Z" fill="#007aff" opacity="0.8"/><path d="M30 8 L30 30 Q30 31 29 31 L19 31 Q18 31 18 30 L18 8 Q18 7 19 7 L29 7 Q30 7 30 8 Z" fill="#34c759" opacity="0.8"/><rect x="17" y="7" width="2" height="24" rx="0.5" fill="currentColor" opacity="0.3"/></svg>
+      <svg class="mini-icon" viewBox="0 0 36 36"><rect x="13" y="6" width="10" height="16" rx="5" fill="#ff6b9d" opacity="0.85"/><path d="M9 18 Q9 24 18 24 Q27 24 27 18" stroke="#ff6b9d" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="18" y1="24" x2="18" y2="28" stroke="#ff6b9d" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="28" x2="22" y2="28" stroke="#ff6b9d" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="mini-icon" viewBox="0 0 36 36"><path d="M18 4 L21 14 L31 17 L21 20 L18 30 L15 20 L5 17 L15 14 Z" fill="#ffd700" opacity="0.9"/><circle cx="18" cy="17" r="2" fill="#fff" opacity="0.5"/></svg>
+      <svg class="mini-icon" viewBox="0 0 36 36"><path d="M18 32 C18 32 6 24 6 14 C6 8 12 4 18 9 C24 4 30 8 30 14 C30 24 18 32 18 32 Z" fill="#ff3b6e" opacity="0.85"/></svg>
+    </div>
+    <div class="studio">
+      <svg class="studio-logo" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="studioGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff6b9d"/><stop offset="100%" style="stop-color:#af52de"/></linearGradient></defs>
+        <circle cx="14" cy="14" r="13" fill="url(#studioGrad)" opacity="0.15"/>
+        <circle cx="14" cy="12" r="7" fill="url(#studioGrad)" opacity="0.7"/>
+        <path d="M7 6 L10 9 L8 4 Z" fill="#ff3b6e"/><path d="M21 6 L18 9 L20 4 Z" fill="#ff3b6e"/>
+        <circle cx="11.5" cy="12" r="1.2" fill="#fff"/><circle cx="16.5" cy="12" r="1.2" fill="#fff"/>
+        <path d="M11 15 Q14 17 17 15" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span><strong>小洢工作室</strong><br>© <span id="copyright-year-about"></span> 保留所有权利</span>
+    </div>
+    <button id="about-close">关闭</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const logEl = $('#log');
+  const logTextEl = logEl.querySelector('.log-text');
+  const textEl = $('#text');
+  const voiceSelect = $('#voiceSelect');
+  const rateEl = $('#rate');
+  const pitchEl = $('#pitch');
+  const rateVal = $('#rateVal');
+  const pitchVal = $('#pitchVal');
+  const toggleBtn = $('#toggle');
+  const toggleReaderBtn = $('#toggle-reader');
+  const pasteBtn = $('#paste');
+  const editToggleBtn = $('#edit-toggle');
+  const backBtn = $('#back');
+  const editor = $('#editor');
+  const reader = $('#reader');
+  const mainButtons = $('#main-buttons');
+  const readerControls = $('#reader-controls');
+  const editorControls = $('#editor-controls');
+  const editorControls2 = $('#editor-controls2');
+  const showAllBtn = $('#showAllVoices');
+  const aboutBtn = $('#about-btn');
+  const aboutOverlay = $('#about-overlay');
+  const aboutClose = $('#about-close');
+  const emptyState = $('#empty-state');
+  const fileInput = $('#fileInput');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const isHrefMode = urlParams.has('href');
+  const isFileMode = urlParams.get('file') === '1';
+
+  let paragraphs = [];
+  let currentIndex = 0;
+  let isPlaying = false;
+  let warmed = false;
+  let speakTimer = null;
+  let runId = 0;
+  let voices = [];
+  let userHasPickedVoice = false;
+  let userSelectedVoiceRef = null;
+  let autoSelectDone = false;
+  let autoSelectRetries = 0;
+  const MAX_AUTO_RETRIES = 8;
+  let longPressTimer = null;
+  let longPressFired = false;
+  const longPressDelay = 400;
+  let wordUtterance = null;
+  let wordHighlightMark = null;
+  let fsEverClicked = false;
+  let logResizeObserver = null;
+  
+  const synth = window.speechSynthesis;
+
+  let clearLogTimer = null;
+  function log(msg) { 
+    logTextEl.textContent = msg; 
+    if (msg) { logEl.classList.add('has-text'); }
+    else { logEl.classList.remove('has-text'); }
+    if (clearLogTimer) { clearTimeout(clearLogTimer); clearLogTimer = null; }
+    if (msg && !msg.startsWith('🔊')) {
+      clearLogTimer = setTimeout(() => { log(''); }, 3000);
+    }
+  }
+
+  function loadVoices(timeout = 3000) {
+    return new Promise((resolve) => {
+      let list = synth.getVoices();
+      if (list.length) return resolve(list);
+      const done = () => { list = synth.getVoices(); if (list.length) { synth.removeEventListener('voiceschanged', done); resolve(list); } };
+      synth.addEventListener('voiceschanged', done);
+      setTimeout(() => resolve(synth.getVoices()), timeout);
+    });
+  }
+  function normalizeLang(lang) { return (lang || '').toLowerCase().replace(/_/g, '-').replace(/\s.*$/, ''); }
+  function getLangPrefix(lang) { return (lang || '').toLowerCase().split(/[-_]/)[0]; }
+  function getBrowserLang() {
+    const preferred = (navigator.languages || []).filter(Boolean);
+    if (preferred.length > 0) { const raw = preferred[0]; return { full: normalizeLang(raw), prefix: getLangPrefix(raw) }; }
+    const raw = navigator.language || navigator.userLanguage || 'en-US';
+    return { full: normalizeLang(raw), prefix: getLangPrefix(raw) };
+  }
+  function findBestVoice(voiceList, targetFull, targetPrefix) {
+    if (!voiceList.length) return null;
+    let best = voiceList.find(v => normalizeLang(v.lang) === targetFull);
+    if (best) return best;
+    best = voiceList.find(v => getLangPrefix(v.lang) === targetPrefix);
+    if (best) return best; return null;
+  }
+  function autoSelectVoice() {
+    if (userHasPickedVoice || autoSelectDone) return;
+    if (!voices.length) return;
+    const { full, prefix } = getBrowserLang();
+    const best = findBestVoice(voices, full, prefix);
+    if (best) {
+      autoSelectDone = true; voiceSelect.value = voices.indexOf(best);
+      userSelectedVoiceRef = { name: best.name, lang: best.lang };
+      log('🔊 ' + best.name + ' (' + best.lang + ')');
+      filterVoiceListToLang(best.lang);
+    } else {
+      autoSelectRetries++;
+      if (autoSelectRetries < MAX_AUTO_RETRIES) { setTimeout(autoSelectVoice, Math.min(300 * autoSelectRetries, 2000)); }
+      else {
+        const enVoice = voices.find(v => getLangPrefix(v.lang) === 'en') || voices[0];
+        if (enVoice) {
+          autoSelectDone = true; voiceSelect.value = voices.indexOf(enVoice);
+          userSelectedVoiceRef = { name: enVoice.name, lang: enVoice.lang };
+          log('🔊 ' + enVoice.name + ' (' + enVoice.lang + ')');
+          filterVoiceListToLang(enVoice.lang);
+        }
+      }
+    }
+  }
+  function fillVoiceList() {
+    loadVoices().then((list) => {
+      voices = list;
+      const previouslySelectedVoice = userSelectedVoiceRef ? voices.find(v => v.name === userSelectedVoiceRef.name && v.lang === userSelectedVoiceRef.lang) : null;
+      voiceSelect.innerHTML = '';
+      if (!voices.length) { voiceSelect.appendChild(new Option('No voices detected', '')); return; }
+      voices.forEach((v, i) => { voiceSelect.appendChild(new Option(`${v.name} (${v.lang})${v.localService ? '' : ' · Cloud'}`, i)); });
+      if (!userHasPickedVoice && !autoSelectDone) { autoSelectVoice(); }
+      else if (previouslySelectedVoice) { const restoredIdx = voices.indexOf(previouslySelectedVoice); if (restoredIdx >= 0) { voiceSelect.value = restoredIdx; log('🔊 ' + previouslySelectedVoice.name + ' (' + previouslySelectedVoice.lang + ')'); } }
+    });
+  }
+  function filterVoiceListToLang(targetLang) {
+    if (!targetLang || !voices.length) return;
+    const prefix = getLangPrefix(targetLang);
+    const matching = voices.filter(v => getLangPrefix(v.lang) === prefix);
+    if (matching.length <= 1) return;
+    const currentVoice = voices[voiceSelect.value];
+    voiceSelect.innerHTML = '';
+    matching.forEach((v) => { voiceSelect.appendChild(new Option(`${v.name} (${v.lang})${v.localService ? '' : ' · Cloud'}`, voices.indexOf(v))); });
+    if (currentVoice) { const stillThere = matching.findIndex(v => v.name === currentVoice.name && v.lang === currentVoice.lang); if (stillThere >= 0) { voiceSelect.value = voices.indexOf(currentVoice); log('🔊 ' + currentVoice.name + ' (' + currentVoice.lang + ')'); } }
+  }
+  function showAllVoices() {
+    if (!voices.length) return;
+    const currentVoice = voices[voiceSelect.value];
+    voiceSelect.innerHTML = '';
+    voices.forEach((v, i) => { voiceSelect.appendChild(new Option(`${v.name} (${v.lang})${v.localService ? '' : ' · Cloud'}`, i)); });
+    if (currentVoice) { const idx = voices.findIndex(v => v.name === currentVoice.name && v.lang === currentVoice.lang); if (idx >= 0) { voiceSelect.value = idx; log('🔊 ' + currentVoice.name + ' (' + currentVoice.lang + ')'); } }
+  }
+
+  function clearLongPress() {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    longPressFired = false;
+  }
+  function clearWordHighlight() {
+    if (wordHighlightMark && wordHighlightMark.parentNode) {
+      const text = wordHighlightMark.textContent;
+      const textNode = document.createTextNode(text);
+      wordHighlightMark.parentNode.replaceChild(textNode, wordHighlightMark);
+      wordHighlightMark = null;
+    }
+    const sel = window.getSelection();
+    if (sel) sel.removeAllRanges();
+  }
+  function stopWordSpeech() {
+    if (wordUtterance) { synth.cancel(); wordUtterance = null; }
+    clearWordHighlight();
+  }
+  function speakWord(word) {
+    stopWordSpeech(); clearLongPress();
+    if (isPlaying) doStop();
+    wordUtterance = new SpeechSynthesisUtterance(word);
+    const voice = voices[voiceSelect.value];
+    wordUtterance.lang = voice ? voice.lang : 'en-US';
+    wordUtterance.rate = parseFloat(rateEl.value);
+    wordUtterance.pitch = parseFloat(pitchEl.value);
+    if (voice) wordUtterance.voice = voice;
+    wordUtterance.onend = () => { clearWordHighlight(); wordUtterance = null; };
+    wordUtterance.onerror = (e) => {
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      clearWordHighlight(); wordUtterance = null;
+    };
+    synth.speak(wordUtterance);
+    logEl.querySelectorAll('.word-link').forEach(el => el.remove());
+    log('🔊 ' + word);
+    document.body.classList.remove('log-hidden');
+    barVisible = true;
+    const q = encodeURIComponent(word);
+    const cambridgeWord = encodeURIComponent(word.trim().toLowerCase());
+    const isSingleWord = /^[a-z]+$/i.test(word.trim());
+    const linksData = [
+      { icon: '🔍', label: 'Bing', url: 'https://cn.bing.com/dict/search?q=' + q },
+      { icon: '🎓', label: 'Cambridge', url: isSingleWord ? 'https://dictionary.cambridge.org/dictionary/english/' + cambridgeWord : 'https://dictionary.cambridge.org/search/english/?q=' + cambridgeWord },
+      { icon: '📖', label: '有道', url: 'https://dict.youdao.com/result?word=' + q + '&lang=en' }
+    ];
+    linksData.forEach(d => {
+      const a = document.createElement('a');
+      a.className = 'word-link'; a.href = d.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.title = d.label; a.innerHTML = d.icon + ' <span class="link-text">' + d.label + '</span>';
+      logEl.insertBefore(a, fsBtn);
+    });
+  }
+  function getWordAtPoint(element, x, y) {
+    let range;
+    if (document.caretRangeFromPoint) { range = document.caretRangeFromPoint(x, y); }
+    else if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(x, y);
+      if (pos) { range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); range.setEnd(pos.offsetNode, pos.offset); }
+    }
+    if (!range) return null;
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return null;
+    const text = node.textContent;
+    let offset = range.startOffset;
+    const isCJK = /[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef\u0e00-\u0e7f]/.test(text[offset] || '');
+    let start, end;
+    if (isCJK) { start = offset; end = offset + 1; }
+    else {
+      const wordBoundaries = /[\s,.\-!?;:，。！？；：、()（）[\]【】""''""'']/;
+      start = offset; end = offset;
+      while (start > 0 && !wordBoundaries.test(text[start - 1])) start--;
+      while (end < text.length && !wordBoundaries.test(text[end])) end++;
+    }
+    const word = text.substring(start, end).trim();
+    if (!word || word.length < 1) return null;
+    return { word, node, start, end };
+  }
+  function setupLongPress(el) {
+    function startLongPress(x, y, target) {
+      clearLongPress(); longPressFired = false;
+      if (!warmed && isHrefMode && !fsEverClicked) {
+        warmed = true;
+        const w = new SpeechSynthesisUtterance(' ');
+        w.volume = 0; w.rate = 10; w.pitch = 1;
+        w.onend = () => { log('✅ 语音初始化完毕'); };
+        w.onerror = (e) => { log('❌ 语音初始化失败 (' + e.error + ') — 请长按'); };
+        synth.speak(w);
+        return;
+      }
+      if (!warmed) {
+        warmed = true;
+        const w = new SpeechSynthesisUtterance(' ');
+        w.volume = 0; w.rate = 10;
+        synth.speak(w);
+      }
+      longPressTimer = setTimeout(() => {
+        longPressFired = true; window.getSelection().removeAllRanges();
+        const result = getWordAtPoint(target, x, y);
+        if (result) {
+          const textNode = result.node; const text = textNode.textContent;
+          const before = text.substring(0, result.start); const word = text.substring(result.start, result.end); const after = text.substring(result.end);
+          const parent = textNode.parentNode; const frag = document.createDocumentFragment();
+          if (before) frag.appendChild(document.createTextNode(before));
+          const mark = document.createElement('mark'); mark.className = 'word-hl'; mark.textContent = word; frag.appendChild(mark);
+          if (after) frag.appendChild(document.createTextNode(after));
+          parent.replaceChild(frag, textNode); wordHighlightMark = mark; speakWord(word);
+        }
+      }, longPressDelay);
+    }
+    el.addEventListener('contextmenu', (e) => { if (e.target.closest('.paragraph')) { e.preventDefault(); return false; } });
+    el.addEventListener('touchstart', (e) => { if (e.target.closest('.paragraph')) { const touch = e.touches[0]; startLongPress(touch.clientX, touch.clientY, e.target); } }, { passive: true });
+    el.addEventListener('touchmove', () => { clearLongPress(); }, { passive: true });
+    el.addEventListener('touchend', (e) => { if (longPressFired) { e.preventDefault(); } clearLongPress(); }, { passive: false });
+    el.addEventListener('touchcancel', clearLongPress, { passive: true });
+    el.addEventListener('mousedown', (e) => { if (e.target.closest('.paragraph')) { startLongPress(e.clientX, e.clientY, e.target); } });
+    el.addEventListener('mousemove', clearLongPress, { passive: true });
+    el.addEventListener('mouseup', (e) => { if (longPressFired) { e.preventDefault(); } clearLongPress(); }, { passive: false });
+    el.addEventListener('mouseleave', clearLongPress, { passive: true });
+  }
+
+  function getTopVisibleParagraphIndex() {
+    const paras = reader.querySelectorAll('.paragraph');
+    if (!paras.length) return 0;
+    for (let i = 0; i < paras.length; i++) {
+      const rect = paras[i].getBoundingClientRect();
+      if (rect.top >= 0 && rect.top < window.innerHeight * 0.5) return i;
+    }
+    for (let i = 0; i < paras.length; i++) {
+      if (paras[i].getBoundingClientRect().bottom > 0) return i;
+    }
+    return 0;
+  }
+
+  function renderReader(text) {
+    paragraphs = text.split(/\r?\n/).map(l => l);
+    currentIndex = 0;
+    emptyState.style.display = 'none';
+    reader.innerHTML = '';
+    paragraphs.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'paragraph';
+      if (p === '') {
+        div.style.height = '1em'; div.style.padding = '0'; div.style.marginBottom = '0.3em'; div.style.pointerEvents = 'none';
+      } else { div.textContent = p; }
+      div.addEventListener('click', (e) => {
+        if (longPressFired) return;
+        if (!isPlaying) return;
+        if (paragraphs[i] === '') return;
+        runId++; synth.cancel();
+        let target = i;
+        while (target < paragraphs.length && paragraphs[target] === '') target++;
+        if (target >= paragraphs.length) target = i;
+        currentIndex = target; speakFrom(target);
+        log('▶ From: ' + paragraphs[target].substring(0, 30) + '…');
+      });
+      reader.appendChild(div);
+    });
+    reader.classList.add('active');
+    readerControls.classList.add('active');
+    updateReaderToggleBtn();
+    setupLongPress(reader);
+  }
+
+  function highlightParagraph(index) {
+    const paras = reader.querySelectorAll('.paragraph');
+    paras.forEach((p, i) => {
+      p.classList.remove('active', 'spoken');
+      if (i < index) p.classList.add('spoken');
+      if (i === index) p.classList.add('active');
+    });
+    if (index < paras.length) {
+      const target = paras[index];
+      const scrollOffset = target.offsetTop - reader.offsetTop - (reader.clientHeight / 2) + (target.offsetHeight / 2);
+      reader.scrollTop = Math.max(0, scrollOffset);
+    }
+  }
+
+  function speakFrom(index) {
+    if (!isPlaying) return;
+    logEl.querySelectorAll('.word-link').forEach(el => el.remove());
+    log('');
+    const myRun = ++runId;
+    currentIndex = index;
+    function next() {
+      if (myRun !== runId) return;
+      while (currentIndex < paragraphs.length && paragraphs[currentIndex] === '') currentIndex++;
+      if (currentIndex >= paragraphs.length) {
+        reader.querySelectorAll('.paragraph').forEach(p => { p.classList.remove('active', 'spoken'); });
+        currentIndex = 0; log('Repeating…'); speakTimer = setTimeout(next, 1200); return;
+      }
+      highlightParagraph(currentIndex);
+      const u = new SpeechSynthesisUtterance(paragraphs[currentIndex]);
+      const voice = voices[voiceSelect.value];
+      u.lang = voice ? voice.lang : 'en-US';
+      u.rate = parseFloat(rateEl.value); u.pitch = parseFloat(pitchEl.value);
+      if (voice) u.voice = voice;
+      u.onend = () => { if (myRun !== runId) return; currentIndex++; next(); };
+      u.onerror = (e) => {
+        if (e.error === 'interrupted' || e.error === 'canceled') return;
+        if (myRun !== runId) return;
+        isPlaying = false; updateReaderToggleBtn(); log('Error: ' + e.error);
+      };
+      synth.speak(u);
+    }
+    next();
+  }
+
+  function doStop() {
+    runId++; synth.cancel();
+    if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
+    isPlaying = false; updateReaderToggleBtn(); log('Stopped');
+    log(''); logEl.querySelectorAll('.word-link').forEach(el => el.remove());
+  }
+
+  function switchVoiceWhilePlaying() {
+    const savedIndex = currentIndex; runId++; synth.cancel();
+    setTimeout(() => { if (!isPlaying || runId === 0) return; currentIndex = savedIndex; speakFrom(savedIndex); }, 500);
+  }
+
+  function updateToggleBtn() {
+    toggleBtn.textContent = isPlaying ? '■ Stop' : '▶ Read';
+    toggleBtn.classList.toggle('stop-mode', isPlaying); toggleBtn.classList.toggle('secondary', !isPlaying);
+  }
+  function updateReaderToggleBtn() {
+    toggleReaderBtn.textContent = isPlaying ? '■ Stop' : '▶ Read';
+    toggleReaderBtn.classList.toggle('stop-mode', isPlaying); toggleReaderBtn.classList.toggle('secondary', !isPlaying);
+  }
+
+  function loadFromHref() {
+    const href = urlParams.get('href');
+    if (!href) return;
+    log('Loading text from ' + href + ' …');
+    fetch(href)
+      .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.text(); })
+      .then(text => {
+        renderReader(text);
+        log('Loaded ' + text.length + ' chars. Long-press a word to hear it spoken.');
+      })
+      .catch(err => log('Failed to load: ' + err.message));
+  }
+
+  function enterReaderFromEditor() {
+    const text = textEl.value;
+    if (!text) { log('Please enter text to read'); return; }
+    editor.classList.add('hidden');
+    mainButtons.style.display = 'none';
+    renderReader(text);
+  }
+
+  function exitToEditor() {
+    stopWordSpeech();
+    if (paragraphs.length > 0) { textEl.value = paragraphs.join('\n'); }
+    editor.classList.remove('hidden');
+    mainButtons.style.display = 'flex';
+    reader.classList.remove('active');
+    readerControls.classList.remove('active');
+    editToggleBtn.classList.remove('active');
+    if (isPlaying) doStop();
+    log(''); logEl.querySelectorAll('.word-link').forEach(el => el.remove());
+    updateToggleBtn();
+  }
+
+  function exitHrefMode() {
+    stopWordSpeech();
+    reader.classList.remove('active');
+    readerControls.classList.remove('active');
+    emptyState.style.display = 'block';
+    if (isPlaying) doStop();
+    log(''); logEl.querySelectorAll('.word-link').forEach(el => el.remove());
+  }
+
+  const fsBtn = document.getElementById('fs-toggle');
+  const fsIconExpand = document.getElementById('fs-icon-expand');
+  const fsIconClose = document.getElementById('fs-icon-close');
+  let fsActive = false;
+  function enterFullscreen() {
+    fsEverClicked = true;
+    document.body.classList.add('fs-mode');
+    document.body.style.overflow = 'hidden';
+    fsIconExpand.style.display = 'none'; fsIconClose.style.display = 'block';
+    fsBtn.title = 'Exit Fullscreen (Esc)'; fsActive = true;
+    document.body.classList.remove('log-hidden');
+    requestAnimationFrame(() => { reader.style.paddingTop = logEl.offsetHeight + 'px'; });
+    logResizeObserver = new ResizeObserver(() => {
+      if (fsActive) reader.style.paddingTop = logEl.offsetHeight + 'px';
+    });
+    logResizeObserver.observe(logEl);
+  }
+  function exitFullscreen() {
+    document.body.classList.remove('fs-mode');
+    document.body.style.overflow = '';
+    fsIconExpand.style.display = 'block'; fsIconClose.style.display = 'none';
+    fsBtn.title = 'Toggle Fullscreen'; fsActive = false;
+    document.body.classList.remove('log-hidden');
+    reader.style.paddingTop = '';
+    if (logResizeObserver) { logResizeObserver.disconnect(); logResizeObserver = null; }
+  }
+  fsBtn.addEventListener('click', () => { if (fsActive) exitFullscreen(); else enterFullscreen(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fsActive) exitFullscreen(); });
+
+  let lastScrollTop = reader.scrollTop;
+  let barVisible = true;
+  let hideTimer = null;
+  function showBar() {
+    if (!barVisible) { document.body.classList.remove('log-hidden'); barVisible = true; }
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    if (fsActive && isPlaying) {
+      hideTimer = setTimeout(() => {
+        if (logTextEl.textContent.startsWith('🔊')) return;
+        document.body.classList.add('log-hidden'); barVisible = false;
+      }, 3000);
+    }
+  }
+  function hideBar() {
+    lastScrollTop = reader.scrollTop; 
+    if (logTextEl.textContent.startsWith('🔊')) return;
+    if (barVisible) { document.body.classList.add('log-hidden'); barVisible = false; }
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  }
+  reader.addEventListener('scroll', () => {
+    if (!fsActive) return;
+    const st = reader.scrollTop;
+    const maxScroll = reader.scrollHeight - reader.clientHeight;
+    barVisible = !document.body.classList.contains('log-hidden');
+    if (st <= 15 || st >= maxScroll - 15) { showBar(); lastScrollTop = st; return; }
+    if (st > lastScrollTop + 15) hideBar();
+    else if (st < lastScrollTop - 15) showBar();
+    lastScrollTop = st;
+  }, { passive: true });
+  document.addEventListener('click', (e) => {
+    if (!fsActive) return;
+    if (e.target.closest('#log')) return;
+    lastScrollTop = reader.scrollTop;
+    barVisible = !document.body.classList.contains('log-hidden');
+    if (isPlaying) showBar();
+    else {
+      if (barVisible) { document.body.classList.add('log-hidden'); barVisible = false; }
+      else { document.body.classList.remove('log-hidden'); barVisible = true; }
+    }
+  });
+
+  let initialDistance = null; let initialFontSize = 17;
+  reader.addEventListener('touchstart', (e) => {
+    if (!fsActive) return;
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      initialDistance = Math.sqrt(dx * dx + dy * dy);
+      const sample = reader.querySelector('.paragraph');
+      if (sample) initialFontSize = parseFloat(getComputedStyle(sample).fontSize);
+    }
+  }, { passive: true });
+  reader.addEventListener('touchmove', (e) => {
+    if (!fsActive || e.touches.length !== 2 || !initialDistance) return;
+    e.preventDefault();
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const scale = dist / initialDistance;
+    let newSize = initialFontSize * scale;
+    newSize = Math.max(8, newSize);
+    reader.querySelectorAll('.paragraph').forEach(p => { p.style.fontSize = newSize + 'px'; });
+  }, { passive: false });
+  reader.addEventListener('touchend', () => { initialDistance = null; }, { passive: true });
+
+  (function () {
+    var startYear = 2026;
+    var currentYear = new Date().getFullYear();
+    var text = startYear === currentYear ? String(startYear) : startYear + '–' + currentYear;
+    var aboutEl = document.getElementById('copyright-year-about');
+    var footerEl = document.getElementById('copyright-year-footer');
+    if (aboutEl) aboutEl.textContent = text;
+    if (footerEl) footerEl.textContent = text;
+  })();
+
+  function renderModeSwitchLink() {
+    const el = document.getElementById('modeSwitchLink');
+    if (!el) return;
+    const url = new URL(window.location.href);
+    
+    // 🔧 FIX: Remove external href param when switching modes
+    url.searchParams.delete('href');
+    
+    const isFileMode = url.searchParams.get('file') === '1';
+    if (isFileMode) {
+        url.searchParams.delete('file');
+        const paramsString = url.searchParams.toString();
+        const clean = url.pathname + (paramsString ? '?' + paramsString : '');
+        el.innerHTML = '<a href="' + clean + '" style="color:var(--primary);text-decoration:none;font-size:13px;opacity:0.8;">📋 改为粘贴文本</a>';
+    } else {
+        url.searchParams.set('file', '1');
+        const paramsString = url.searchParams.toString();
+        el.innerHTML = '<a href="' + url.pathname + (paramsString ? '?' + paramsString : '') + '" style="color:var(--primary);text-decoration:none;font-size:13px;opacity:0.8;">📁 从文件加载</a>';
+    }
+}
+  renderModeSwitchLink();
+  aboutBtn.addEventListener('click', () => {
+    aboutOverlay.classList.add('active');
+  });
+  aboutClose.addEventListener('click', () => { aboutOverlay.classList.remove('active'); });
+  aboutOverlay.addEventListener('click', (e) => { if (e.target === aboutOverlay) aboutOverlay.classList.remove('active'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') aboutOverlay.classList.remove('active'); });
+
+  fillVoiceList();
+  if (typeof synth.onvoiceschanged !== 'undefined') { synth.onvoiceschanged = fillVoiceList; }
+  [500, 1000, 2000, 3000, 5000].forEach((delay, i, arr) => {
+    setTimeout(() => {
+      if (!voices.length) fillVoiceList();
+      else if (!autoSelectDone) autoSelectVoice();
+      if (i === arr.length - 1 && !autoSelectDone) setTimeout(() => { if (!autoSelectDone && voices.length) autoSelectVoice(); }, 1000);
+    }, delay);
+  });
+
+  voiceSelect.addEventListener('change', () => {
+    userHasPickedVoice = true; autoSelectDone = true;
+    const v = voices[voiceSelect.value];
+    if (v) { userSelectedVoiceRef = { name: v.name, lang: v.lang }; log('🔊 ' + v.name + ' (' + v.lang + ')'); filterVoiceListToLang(v.lang); }
+    if (isPlaying) switchVoiceWhilePlaying();
+  });
+  showAllBtn.addEventListener('click', () => { showAllVoices(); log('Showing all voices'); });
+
+  // ─── iOS Value Bubble Slider logic ───
+  function setupBubbleSlider(trackEl, fillEl, thumbEl, bubbleEl, valEl, hiddenInput) {
+    const min = parseFloat(hiddenInput.min);
+    const max = parseFloat(hiddenInput.max);
+    const step = parseFloat(hiddenInput.step);
+
+    function pctFromVal(val) { return ((val - min) / (max - min)) * 100; }
+    function valFromPct(pct) {
+      const raw = min + (pct / 100) * (max - min);
+      const stepped = Math.round(raw / step) * step;
+      return Math.max(min, Math.min(max, stepped));
+    }
+    function update(val, showBubble) {
+      const pct = pctFromVal(val);
+      fillEl.style.width = pct + '%';
+      thumbEl.style.left = pct + '%';
+      hiddenInput.value = val.toFixed(1);
+      valEl.textContent = parseFloat(val).toFixed(1);
+      if (showBubble) {
+        bubbleEl.textContent = parseFloat(val).toFixed(1) + '×';
+        bubbleEl.classList.add('show');
+        bubbleEl.style.left = 'calc(' + pct + '% + 0px)';
+      }
+    }
+
+    // Init
+    update(parseFloat(hiddenInput.value), false);
+
+    function handleDown(clientX) {
+      thumbEl.classList.add('active');
+      bubbleEl.classList.add('show');
+      const rect = trackEl.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const val = valFromPct(pct);
+      update(val, true);
+      if (hiddenInput.id === 'rate' && isPlaying) switchVoiceWhilePlaying();
+    }
+    function handleMove(clientX) {
+      if (!thumbEl.classList.contains('active')) return;
+      const rect = trackEl.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const val = valFromPct(pct);
+      update(val, true);
+    }
+    function handleUp() {
+      thumbEl.classList.remove('active');
+      bubbleEl.classList.remove('show');
+    }
+
+    trackEl.addEventListener('mousedown', (e) => { e.preventDefault(); handleDown(e.clientX); });
+    document.addEventListener('mousemove', (e) => handleMove(e.clientX));
+    document.addEventListener('mouseup', handleUp);
+    trackEl.addEventListener('touchstart', (e) => { handleDown(e.touches[0].clientX); }, { passive: true });
+    document.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX), { passive: true });
+    document.addEventListener('touchend', handleUp);
+  }
+
+  setupBubbleSlider(
+    document.getElementById('rateTrack'),
+    document.getElementById('rateFill'),
+    document.getElementById('rateThumb'),
+    document.getElementById('rateBubble'),
+    document.getElementById('rateVal'),
+    document.getElementById('rate')
+  );
+  setupBubbleSlider(
+    document.getElementById('pitchTrack'),
+    document.getElementById('pitchFill'),
+    document.getElementById('pitchThumb'),
+    document.getElementById('pitchBubble'),
+    document.getElementById('pitchVal'),
+    document.getElementById('pitch')
+  );
+
+  if (isHrefMode) {
+    mainButtons.style.display = 'none'; editor.classList.add('hidden');
+    emptyState.style.display = 'block'; backBtn.style.display = 'none'; editToggleBtn.style.display = 'none';
+  } else if (isFileMode) {
+     pasteBtn.textContent = '📁 文件';
+     editToggleBtn.style.display = 'none';
+   } else { textEl.placeholder = 'Type or paste text here to read aloud…'; }
+
+  pasteBtn.addEventListener('click', async () => {
+    if (isFileMode) {
+      fileInput.click();
+      return;
+    }if (navigator.clipboard && window.isSecureContext) {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          textEl.value = text;
+          if (!warmed) { warmed = true; const w = new SpeechSynthesisUtterance(' '); w.volume = 0; w.rate = 10; synth.speak(w); }
+          isPlaying = false; enterReaderFromEditor();
+          log('Pasted ' + text.length + ' chars. Long-press a word to hear it spoken.');
+        } else { log('Clipboard empty, please paste manually'); }
+      } catch { textEl.focus(); log('Cannot read clipboard automatically, please long-press to paste'); }
+    } else { textEl.focus(); log('Auto-paste not supported, please long-press and select Paste'); }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      log('Please select a .txt file');
+      fileInput.value = '';
+      return;
+    }
+    const fr = new FileReader();
+    fr.onload = (ev) => {
+      const text = ev.target.result;
+      if (!text) { log('File is empty'); fileInput.value = ''; return; }
+      textEl.value = text;
+      if (!warmed) { warmed = true; const w = new SpeechSynthesisUtterance(' '); w.volume = 0; w.rate = 10; synth.speak(w); }
+      isPlaying = false; enterReaderFromEditor();
+      log('Loaded ' + text.length + ' chars from ' + file.name + '. Long-press a word to hear it spoken.');
+      fileInput.value = '';
+    };
+    fr.onerror = () => { log('Failed to read file'); fileInput.value = ''; };
+    fr.readAsText(file);
+  });
+  
+  editToggleBtn.addEventListener('click', () => { exitToEditor(); });
+
+  toggleBtn.addEventListener('click', () => {
+    if (isPlaying) { doStop(); return; }
+    if (!warmed) { warmed = true; const w = new SpeechSynthesisUtterance(' '); w.volume = 0; w.rate = 10; synth.speak(w); }
+    enterReaderFromEditor(); isPlaying = true; updateReaderToggleBtn(); log('Reading…'); speakFrom(currentIndex);
+  });
+
+  toggleReaderBtn.addEventListener('click', () => {
+    if (isPlaying) { doStop(); }
+    else {
+      if (isHrefMode && !paragraphs.length) { loadFromHref(); return; }
+      if (!paragraphs.length) { log('No text loaded.'); return; }
+      if (!warmed) { warmed = true; const w = new SpeechSynthesisUtterance(' '); w.volume = 0; w.rate = 10; synth.speak(w); }
+      currentIndex = getTopVisibleParagraphIndex();
+      isPlaying = true; updateReaderToggleBtn(); log('Reading…'); speakFrom(currentIndex);
+    }
+  });
+
+  backBtn.addEventListener('click', exitToEditor);
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden && isPlaying) doStop(); });
+  window.addEventListener('pagehide', () => { if (isPlaying) doStop(); });
+  window.addEventListener('focus', () => { if (!isPlaying && synth.speaking) synth.cancel(); });
+
+  if (isHrefMode) { log('Ready. Loading from href…'); loadFromHref(); }
+  else { log('Ready: paste text to read, or type and click Read.'); }
+
+  // ─── SIMPLIFIED background cycler (palette-driven) ───
+  (function(){
+    let i = parseInt(localStorage.getItem('bg-i') || '0');
+    const btn = document.getElementById('bgCycle');
+    function go(n) {
+      const tn = n + 1;
+      document.documentElement.style.setProperty('--bg', 'var(--theme-' + tn + '-bg)');
+      document.body.style.color = 'var(--theme-' + tn + '-fg)';
+      document.documentElement.style.colorScheme = (tn >= 3) ? 'dark' : 'light';
+      const icons = ['☀️','📖','🌗','🌙','⚫'];
+      btn.textContent = icons[n];
+      localStorage.setItem('bg-i', n);
+      document.documentElement.style.setProperty('--fs-btn-color', 'color-mix(in srgb, var(--theme-' + tn + '-fg) 78%, transparent)');
+    }
+    go(i);
+    btn.addEventListener('click', () => { i = (i + 1) % 5; go(i); });
+  })();
+
+})();
+</script>
+</body>
+</html>
