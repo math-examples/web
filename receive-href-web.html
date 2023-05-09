@@ -1,0 +1,317 @@
+<html>
+<!-- 网页浏览器 -->
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>读万卷书</title>
+
+<script>
+function getMyWebPath(){
+    var uri = window.location.toString();
+    if (uri.indexOf("?") > 0) {
+    return uri.substring(0, uri.indexOf("?"));
+    }else return "";
+}
+
+function getQueryHref(paramsString){
+const params = new URLSearchParams(paramsString);
+const title = params.get("title");
+const href = params.getAll("href");
+if(href.length!=0){
+    return href[0];
+}else return "";
+}
+
+function getTrueQueryHref(txtHref){
+    if(txtHref){
+    const myPath = getMyWebPath();
+        if(myPath.length>0 && txtHref.startsWith(myPath)){
+            const queryString = txtHref.replace(myPath, '');
+            txtHref = getQueryHref(queryString);
+        }
+    }
+    return txtHref;
+}
+
+// Prevent web page from being loaded inside iFrame.
+if(window.top !== window.self){
+    const txtHref = document.location.href;
+    document.location.href = getTrueQueryHref(txtHref);
+}
+</script>
+
+<link rel="stylesheet" href="https://math-examples.github.io/web/tts.css"/>
+<script src="https://math-examples.github.io/web/math-examples.js"></script>
+
+<script>
+//if(typeof globalHasIframe=== 'undefined')alert("no globalHasIframe");
+</script>
+
+<style type="text/css">
+a {
+	color: #07519a;
+	text-decoration: none;
+}
+img{
+height: auto;
+width: 100%;
+object-fit: contain;
+}
+</style>
+
+<style>
+* {
+  box-sizing:border-box;
+}
+
+.left {
+ /* background-color:#2196F3; */
+  padding:20px;
+  float:left;
+  width:100%; /* The width is 20%, by default */
+}
+
+.main {
+  /* background-color:#f1f1f1; */
+  padding:20px;
+  float:left;
+  width:0%; /* The width is 60%, by default */
+}
+
+.right {
+  /* background-color:#4CAF50;*/
+  padding:20px;
+  float:left;
+  width:0%; /* The width is 20%, by default */
+}
+
+/* Use a media query to add a break point at 800px: */
+@media screen and (max-width:800px) {
+  .left, .main, .right {
+    width:100%; /* The width is 100%, when the viewport is 800px or smaller */
+  }
+}
+
+#ttsSetting {
+display: none;
+}
+
+.curContent {
+display: none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>📖🖋</h2>
+
+<div>
+
+<!--
+    <form id="form">
+    <input class="input" id="codeInput" type="text" placeholder="输入内容" name="message">
+  </form>
+  
+  <button class="button" onclick="search()">搜索</button>
+-->
+
+
+ <button class="button" id="toggler" onclick="toggle(`.curContent`,`.oriContent`, '阅读📖', '返回↩️', toggleCb1, toggleCb2)">阅读📖</button> 
+
+<button class="button" id="resizeText1" onclick="resizeText(1)">放大🔍</button>
+
+<button class="button" id="resizeText2" onclick="resizeText(-1)">缩小🔎</button>
+
+<button class="button" id="speak" onclick="speak()">朗读🔊</button>
+
+<button class="button" id="speak" onclick="changeBgColor()">换背景🌈</button>
+
+<button class="button" id="contact" onclick="contact()">联系📞</button>
+
+<!-- <button class="button" id="pause" onclick="pause5()">暂停❤<button> -->
+
+</div>
+
+<div id="ttsSetting">
+    <form>
+      <div>
+        <label for="rate">语速</label>
+        <input type="range" min="0.5" max="2" value="1" step="0.1" id="rate" />
+        <div class="rate-value">1</div>
+      </div>
+      
+      <div>
+        <label for="pitch">音调</label>
+        <input type="range" min="0" max="2" value="1" step="0.1" id="pitch" />
+        <div class="pitch-value">1</div>
+      </div>
+      
+      <select></select>
+    </form>
+</div>
+
+<div class="left">
+    
+<iframe class="oriContent" id="oriWeb" src="" width="100%" height="100%" style="border:none;">
+</iframe>
+<!--<pre class="oriContent" id="oriText">Empty</pre> -->
+
+<div class="curContent" id="txt2html">
+    <p>加载中...</p>
+</div>
+
+</div>
+
+<div class="main">
+</div>
+
+<div class="right">
+
+</div>
+
+<script>
+
+var i_extractTxt = 0;
+function extractTxt(){
+    //if(i_extractTxt)return;
+    //let y = `scode=
+    let x = `code=var txt = html2txt();
+window.top.postMessage(txt, trustedOrigins[0]);
+`;
+    runCode(x);
+}
+function search(){
+    let codeInput = document.getElementById('codeInput');
+    let x = codeInput.value;
+    runCode(x);
+}
+
+function onMsg(event) {
+    let txt = event.data;
+    if(txt && txt.length>0){
+        i_extractTxt = 1;
+        txt2html(txt);
+    }
+    //runCode(event.data);
+        //if (!trustedOrigins.includes(event.origin)) return;
+       //alert(`Message from an iframe: ${event.origin}`);
+       //alert(`Message from an iframe: ${event.data} from ${event.origin}`);
+        if (event.data === 'succeeded') { 
+            
+        }
+}
+
+</script>
+
+<script language="JavaScript">
+
+function processIndicator(){
+    if(window.self !== window.top){return;}// required
+    showLog("网页加载中⌛️⏳️");
+    let xw = document.getElementById('oriWeb');
+    xw.addEventListener('load', function () {showLog("网页加载完毕");});
+}
+
+txtHref = "";
+function processUser(){
+if(txtHref!="")return;
+
+txtHref = getQueryHref(window.location.search);
+
+    //const txtHref2 = "https://math-examples.github.io/web-debug/iframe.html";
+    if(txtHref){
+       let xw = document.getElementById('oriWeb');
+       xw.src = txtHref;
+	   processIndicator(); 
+    }
+    
+}
+
+const globalBgColors = [
+    "204, 232, 207",
+    "241, 229, 201",
+    "250, 249, 222",
+    "255, 242, 226",
+    "253, 230, 224",
+    "227, 237, 205",
+    "220, 226, 241",
+    "233, 235, 254",
+    "234, 234, 239",
+    "188, 193, 189",
+    "110, 123, 108",
+    "255, 255, 255"];
+
+var globalBgColorIndex = 0;   
+function setBgColor(rgb) {
+	var colour = 'rgb(' + rgb + ')';
+	document.body.style.backgroundColor = colour;
+	//contentClass
+	//const es = document.querySelectorAll('p');
+//es.forEach(e => { e.style.color = 'rgb(17, 17, 17)';});
+}
+
+function changeBgColor() {
+	 ++globalBgColorIndex;
+	 setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
+}
+
+function toggleCb1(){
+    setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
+    extractTxt();
+    openFullscreen();
+    showLogLong("您已进入全屏阅读模式，再次点击可退出");
+}
+
+function toggleCb2(){
+    setBgColor("255, 255, 255");
+    closeFullscreen();
+    showLog("您已退出全屏阅读模式");
+}
+
+function init(){
+
+window.addEventListener("message", onMsg, false);
+processUser();
+
+document.addEventListener("readystatechange", (event) => {
+  if (event.target.readyState === "interactive") {
+    try {
+      
+    } catch (e) {
+        showLog(e.message);
+    }
+    //initLoader();
+  } else if (event.target.readyState === "complete") {
+    //initApp();
+  }
+});
+}
+
+init();
+
+// tag h1, h2 used by showLog
+function contact(){
+    const s = `<div class="content">
+<h3>
+<span class="emoji">📝</span>
+联系
+</h3>
+<ul>
+<li>👋 本软件无需下载，只要用浏览器打开，就可以读书，欢迎使用。火狐浏览器华为手机可以正常朗读，谷歌浏览器不能保证。</li>
+<li>🗞 虽然不保证能解决，但是还是希望多给一些问题反馈，谢谢支持:&nbsp;<a href="mailto:xbxoxo@gmail.com?subject=读万卷书问题反馈">邮件联系</a></li>
+</ul>
+</div>`;
+    showLogLong(s);
+}
+
+</script>
+
+</body>
+
+</html>
