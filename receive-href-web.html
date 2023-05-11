@@ -269,7 +269,7 @@ function toggleCb1(){
     setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
     extractTxt();
     openFullscreen();
-    const body = document.querySelector("body");
+    const body = document.querySelector(".curContent");
 
 body.addEventListener("dblclick", myToggle);
     showLogLong("您已进入全屏阅读模式，双击屏幕任何地方可退出全屏");
@@ -278,7 +278,7 @@ body.addEventListener("dblclick", myToggle);
 function toggleCb2(){
     setBgColor("255, 255, 255");
     closeFullscreen();
-    const body = document.querySelector("body");
+    const body = document.querySelector(".curContent");
 
   body.removeEventListener("dblclick", myToggle);  
     showLog("您已退出全屏阅读模式");
