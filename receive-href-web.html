@@ -122,7 +122,7 @@ display: none;
 -->
 
 
- <button class="button" id="toggler" onclick="toggle(`.curContent`,`.oriContent`, '阅读📖', '返回↩️', toggleCb1, toggleCb2)">阅读📖</button> 
+ <button class="button" id="toggler" onclick="myToggle()">阅读📖</button> 
 
 <button class="button" id="changeBgColor" onclick="changeBgColor()">背景🌈</button>
 
@@ -261,16 +261,26 @@ function changeBgColor() {
 	 setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
 }
 
+function myToggle(){
+  toggle(`.curContent`,`.oriContent`, '阅读📖', '返回↩️', toggleCb1, toggleCb2);
+}
+
 function toggleCb1(){
     setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
     extractTxt();
     openFullscreen();
-    showLogLong("您已进入全屏阅读模式，再次点击可退出");
+    const body = document.querySelector("body");
+
+body.addEventListener("dblclick", myToggle);
+    showLogLong("您已进入全屏阅读模式，双击屏幕任何地方可退出全屏");
 }
 
 function toggleCb2(){
     setBgColor("255, 255, 255");
     closeFullscreen();
+    const body = document.querySelector("body");
+
+  body.removeEventListener("dblclick", myToggle);  
     showLog("您已退出全屏阅读模式");
 }
 
