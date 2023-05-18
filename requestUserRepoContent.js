@@ -90,9 +90,8 @@ if(reverse) i = length -j;
 
         if (name.charAt(0) =='\(')name = name.substr(name.indexOf('\)')+1);
 
-        name = name.substr(0, name.lastIndexOf('.'));
-
-        
+var ilast = name.lastIndexOf('.');
+if(ilast!=-1)name = name.substr(0, ilast);
 
             // Create the html markup for each li
 
