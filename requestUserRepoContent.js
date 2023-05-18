@@ -87,7 +87,7 @@ if(reverse) i = length -j;
         // var name = data[i].name.split('-').pop();
 
         var name = data[i].name;
-
+alert(name);
         if (name.charAt(0) =='\(')name = name.substr(name.indexOf('\)')+1);
 
 var ilast = name.lastIndexOf('.');
