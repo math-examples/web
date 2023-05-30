@@ -269,18 +269,16 @@ function toggleCb1(){
     setBgColor(globalBgColors[globalBgColorIndex%globalBgColors.length]);
     extractTxt();
     openFullscreen();
-    const body = document.querySelector(".curContent");
-
-body.addEventListener("dblclick", myToggle);
-    showLogLong("您已进入全屏阅读模式，快速点击屏幕两次可退出全屏");
+    document.querySelector(".curContent").addEventListener("dblclick", myToggle);
+   document.querySelector("h2").addEventListener("dblclick", myToggle);
+    showLogLong("您已进入全屏阅读模式，快速点击屏幕文字区域两次可退出全屏");
 }
 
 function toggleCb2(){
     setBgColor("255, 255, 255");
     closeFullscreen();
-    const body = document.querySelector(".curContent");
-
-  body.removeEventListener("dblclick", myToggle);  
+    document.querySelector(".curContent").removeEventListener("dblclick", myToggle);
+    document.querySelector("h2").removeEventListener("dblclick", myToggle);
     showLog("您已退出全屏阅读模式");
 }
 
