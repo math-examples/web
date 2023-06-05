@@ -87,9 +87,11 @@ if(reverse) i = length -j;
 let li = document.createElement('li');
 var prefix = 'https://' + username + '.github.io/' + repository + '/';
 let link ="";
+let isfile =1;
 if(data[i].download_url){ // file
     link = prefix + data[i].download_url.split('/').pop();
 }else{ // folder
+    isfile = 0;
     link = `${myWebPrefix}?user=${username}&repo=${repository}/${data[i].name}`;
 }
         
@@ -98,13 +100,14 @@ if(data[i].download_url){ // file
 
         var name = data[i].name;
 //alert(name);
-        if (name.charAt(0) =='\('){
+if(isfile){
+    if (name.charAt(0) =='\('){
             let ii = name.indexOf('\)');
             if(ii+1<name.length)name = name.substr(ii+1);
         }
 var ilast = name.lastIndexOf('.');
 if(ilast>0)name = name.substring(0, ilast);
-
+}
             // Create the html markup for each li
 
             li.innerHTML = (`
