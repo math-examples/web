@@ -1,3 +1,10 @@
+function getMyWebPathGitApi(){
+    var uri = window.location.toString();
+    if (uri.indexOf("?") > 0) {
+    return uri.substring(0, uri.indexOf("?"));
+    }else return uri;
+}
+
 function replaceTxtHref() {
   var x = document.getElementsByClassName("requestUserRepoContent");
   for (var i = 0; i < x.length; i++) {
@@ -10,21 +17,28 @@ function replaceTxtHref() {
 }
 
 function irequestUserRepoContent(username, repository, reverse, cb){
-
-    
+if(!username || !repository)return;
 
     // Create new XMLHttpRequest object
 
     const xhr = new XMLHttpRequest();
 
-    
+    const repoAndPath = repository.split('/');
+    let repo = repository;
+    let path;
+    if(repoAndPath.length>1){
+        let ifirst = repository.indexOf('/');
+        path = repository.substring(ifirst+1);
+        repo = repository.substring(0, ifirst);
+    }
 
     // GitHub endpoint, dynamically passing in specified username
 
-    const url = `https://api.github.com/repos/${username}/${repository}/contents`;
+    let url = `https://api.github.com/repos/${username}/${repo}/contents`;
+    if(path)url+=`/${path}`;
 
     
-
+//alert(url);
     // const url = `https://api.github.com/users/${username}/repos`;
 
     // /repos/{owner}/{repo}/contents/{path}
@@ -51,47 +65,45 @@ function irequestUserRepoContent(username, repository, reverse, cb){
 
     // Process it here
 
-      xhr.onload = function () {
-
-    
-
+xhr.onload = function () {
         // Parse API data into JSON
 
         const data = JSON.parse(this.response);
-
-        
-
+//alert(data.length);
         let ol = document.getElementById('userReposContent');
 
     let length = data.length;
+    const myWebPrefix = getMyWebPathGitApi();
 
-let text = "<ul>";
 for (let j = 1; j <= length; ++j) {
 
 let i = j-1;
 if(reverse) i = length -j;
-        // Loop over each object in data array
 
+//alert(data[i].download_url);
+//alert(data[i].name);
         // for (let i in data) {
 
-            
-
-            let li = document.createElement('li');
-
-            
-
-        var prefix = 'https://' + username + '.github.io/' + repository + '/';
-
-        link = prefix + data[i].download_url.split('/').pop();
+let li = document.createElement('li');
+var prefix = 'https://' + username + '.github.io/' + repository + '/';
+let link ="";
+if(data[i].download_url){ // file
+    link = prefix + data[i].download_url.split('/').pop();
+}else{ // folder
+    link = `${myWebPrefix}?user=${username}&repo=${repository}/${data[i].name}`;
+}
+        
 
         // var name = data[i].name.split('-').pop();
 
         var name = data[i].name;
 //alert(name);
-        if (name.charAt(0) =='\(')name = name.substr(name.indexOf('\)')+1);
-
+        if (name.charAt(0) =='\('){
+            let ii = name.indexOf('\)');
+            if(ii+1<name.length)name = name.substr(ii+1);
+        }
 var ilast = name.lastIndexOf('.');
-if(ilast!=-1)name = name.substr(0, ilast);
+if(ilast>0)name = name.substring(0, ilast);
 
             // Create the html markup for each li
 
@@ -106,42 +118,20 @@ if(ilast!=-1)name = name.substr(0, ilast);
             // Append each li to the ul
 
             ol.appendChild(li);
-
-        
-
-        }
+} // end for
 
 cb();
-    }
+}; // end onload
 
-    
-
-    // Send the request to the server
-
-    xhr.send();
-
-    
-
+// Send the request to the server
+xhr.send();
 }
 
-function requestUserRepoContent(username, repository){
-    irequestUserRepoContent(username, repository, false, replaceTxtHref);
-}
-
-function requestUserRepoContentReverse(username, repository){
-    irequestUserRepoContent(username, repository, true, replaceTxtHref);
-}
-
-function requestUserRepos(username){
-
-    
-
+function irequestUserRepos(username, reverse){
+    if(!username)return;
     // Create new XMLHttpRequest object
 
     const xhr = new XMLHttpRequest();
-
-    
-
     // GitHub endpoint, dynamically passing in specified username
 
     // const url = `https://api.github.com/repos/${username}/${repository}/contents`;
@@ -163,35 +153,66 @@ function requestUserRepos(username){
     // When request is received
 
     // Process it here
+xhr.onload = function () {
 
-      xhr.onload = function () {
+// Parse API data into JSON
 
-    
+const data = JSON.parse(this.response);
+//alert(data.length);
+let ol = document.getElementById('userReposContent');
 
-        // Parse API data into JSON
+let length = data.length;
+const myWebPrefix = getMyWebPathGitApi();
 
-        const data = JSON.parse(this.response);
+for (let j = 1; j <= length; ++j) {
 
+let i = j-1;
+if(reverse) i = length -j;
 
-        // Loop over each object in data array
+//alert(data[i].download_url);
+//alert(data[i].name);
+        // for (let i in data) {
 
-        for (let i in data) {
+let li = document.createElement('li');
 
-        var repository = data[i].name;
+let link = `${myWebPrefix}?user=${username}&repo=${data[i].name}`;
+var name = data[i].name;
+//alert(name);
 
-        requestUserRepoContent(username, repository);
+            // Create the html markup for each li
 
-        
+            li.innerHTML = (`
 
-        }
+                <p><a class="requestUserRepoContent" href="${link}">${name}</a></p>
 
-    }
+            `);
 
-    
+            
 
-    // Send the request to the server
+            // Append each li to the ul
 
-    xhr.send();
+            ol.appendChild(li);
+} // end for
+
+}; // end onload
+// Send the request to the server
+xhr.send();
+}
+
+function requestUserRepoContent(username, repository){
+    irequestUserRepoContent(username, repository, false, replaceTxtHref);
+}
+
+function requestUserRepoContentReverse(username, repository){
+    irequestUserRepoContent(username, repository, true, replaceTxtHref);
+}
+
+function requestUserRepos(username){
+    irequestUserRepos(username, false);
+}
+
+function requestUserReposReverse(username){
+    irequestUserRepos(username, true);
 }
 
 function getUserRepoZip(username, repository){
