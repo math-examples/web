@@ -86,6 +86,7 @@ if(reverse) i = length -j;
 
 let li = document.createElement('li');
 var prefix = 'https://' + username + '.github.io/' + repository + '/';
+if(repo===username+'.github.io')prefix = 'https://' + repository + '/';
 let link ="";
 let isfile =1;
 if(data[i].download_url){ // file
