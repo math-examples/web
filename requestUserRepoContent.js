@@ -4,7 +4,11 @@ function isTxtSuffix(name) {
     || name.endsWith('.cpp')
     || name.endsWith('.h')
     || name.endsWith('.hpp')
-    || name.endsWith('.py'))
+    || name.endsWith('.py')
+    || name.endsWith('.sh')
+    || name.endsWith('.css')
+    || name.endsWith('.js')
+    || name.endsWith('.bzl'))
       return true;
     return false;
 }
