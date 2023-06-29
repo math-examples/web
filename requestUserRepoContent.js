@@ -1,3 +1,14 @@
+function isTxtSuffix(name) {
+    if(name.endsWith('.txt')
+    || name.endsWith('.cc')
+    || name.endsWith('.cpp')
+    || name.endsWith('.h')
+    || name.endsWith('.hpp')
+    || name.endsWith('.py'))
+      return true;
+    return false;
+}
+
 function getMyWebPathGitApi(){
     var uri = window.location.toString();
     if (uri.indexOf("?") > 0) {
@@ -8,7 +19,7 @@ function getMyWebPathGitApi(){
 function replaceTxtHref() {
   var x = document.getElementsByClassName("requestUserRepoContent");
   for (var i = 0; i < x.length; i++) {
-      if(x[i].href.endsWith('.txt')) {
+      if(isTxtSuffix(x[i].href)) {
           x[i].href = "https://math-examples.github.io/web/receive-href-txt.html"+"?href="+x[i].href;
       }
    //alert(x[i].href);

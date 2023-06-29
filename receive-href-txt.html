@@ -221,7 +221,7 @@ async function displayTxtLocal(text) {
             showLog(`文件名 ${file.name}, 文件大小 ${returnFileSize(file.size)}.`);
             readText(file);
           } else {
-            showLog(`文件名无效 ${file.name}. 请重新选择.`);
+            showLog(`文件名无效 ${file.name}, 文件类型 ${file.type}. 请重新选择.`);
           }
         }
       }
@@ -234,7 +234,8 @@ async function displayTxtLocal(text) {
     ];
     
     function validFileTypeTxt(file) {
-      return fileTypesTxt.includes(file.type);
+      return true;
+      //return fileTypesTxt.includes(file.type);
     }
 
     function returnFileSize(number) {
