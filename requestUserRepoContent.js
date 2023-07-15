@@ -60,9 +60,10 @@ if(!username || !repository)return;
 
     // /repos/{owner}/{repo}/zipball/{ref}
 
-    // https://api.github.com/repos/math-papers/2022/zipball
+    // https://api.github.com/repos/m/2022/zipball
 
-   //  https://api.github.com/repos/math-papers/2022/contents
+   //  https://api.github.com/repos/m/2022/contents
+   // https://api.github.com/repos/google/jax/forks?sort=oldest&per_page=2&page=2
 
    
 
@@ -146,7 +147,7 @@ cb();
 xhr.send();
 }
 
-function irequestUserRepos(username, reverse){
+function irequestUserRepos(username, reverse, ipage){
     if(!username)return;
     // Create new XMLHttpRequest object
 
@@ -157,7 +158,7 @@ function irequestUserRepos(username, reverse){
 
     
 
-    const url = `https://api.github.com/users/${username}/repos`;
+    const url = `https://api.github.com/users/${username}/repos?page=${ipage}`;
 
    
 
@@ -227,11 +228,19 @@ function requestUserRepoContentReverse(username, repository){
 }
 
 function requestUserRepos(username){
-    irequestUserRepos(username, false);
+    irequestUserRepos(username, false, 1);
 }
 
 function requestUserReposReverse(username){
-    irequestUserRepos(username, true);
+    irequestUserRepos(username, true, 1);
+}
+
+function requestUserReposWithPage(username, ipage){
+    irequestUserRepos(username, false, ipage);
+}
+
+function requestUserReposReverseWithPage(username, ipage){
+    irequestUserRepos(username, true, ipage);
 }
 
 function getUserRepoZip(username, repository){
